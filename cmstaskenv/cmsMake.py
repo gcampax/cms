@@ -33,6 +33,7 @@ import yaml
 from cms.grading import get_compilation_command
 from cms.grading.Sandbox import Sandbox
 from cmstaskenv.Test import test_testcases
+from cmstaskenv.SimpleToYaml import conv_task as simple
 
 SOL_DIRNAME = 'sol'
 SOL_FILENAME = 'soluzione'
@@ -605,6 +606,9 @@ def main():
     parser.add_argument("-c", "--clean",
                       help="clean all generated files",
                       dest="clean", action="store_true", default=False)
+    parser.add_argument("-s", "--simple",
+                      help="convert all files in \"simple\" format",
+                      dest="simple", action="store_true", default=False)
     parser.add_argument("-a", "--all",
                       help="make all targets",
                       dest="all", action="store_true", default=False)
@@ -629,13 +633,18 @@ def main():
 
     assume=options.assume
 
+    if options.simple and [len(options.targets) > 0, options.list, options.clean, options.all].count(True) == 0:
+        print "Converting"
+        simple(base_dir)
+        return
+
     task_type = detect_task_type(base_dir)
     yaml_conf = parse_task_yaml(base_dir)
     actions = build_action_list(base_dir, task_type, yaml_conf)
     exec_tree, generated_list = build_execution_tree(actions)
 
     if [len(options.targets) > 0, options.list, options.clean,
-        options.all].count(True) > 1:
+        options.simple, options.all].count(True) > 1:
         parser.error("Too many commands")
 
     if options.list:
